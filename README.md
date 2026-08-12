@@ -1,13 +1,13 @@
-# LinkSnap - Production-Grade Serverless URL Shortener & Analytics
+# LinkSnap - Simple URL Shortener
 
-LinkSnap is a modern, serverless URL shortening and real-time analytics application built with AWS Serverless (Node.js/TypeScript Lambdas, Amazon API Gateway, Amazon MongoDB, AWS SAM IaC) and React 18+ (Vite, TypeScript, Tailwind CSS, Lucide Icons, Recharts, Leaflet).
+LinkSnap is a simple and fast URL shortening application that allows you to easily convert long links into short, manageable URLs.
 
 ---
 
 ## Technical Stack & Architecture
 
-### Backend (AWS Serverless)
-- **AWS SAM (Serverless Application Model)**: IaC defining API Gateway, Lambda handlers, MongoDB tables, and IAM policies.
+### Backend
+- **AWS SAM (Application Model)**: IaC defining API Gateway, Lambda handlers, MongoDB tables, and IAM policies.
 - **Node.js 20.x / TypeScript**: Compiled Lambda handlers using AWS SDK v3 (`@aws-sdk/client-MongoDB`, `@aws-sdk/lib-MongoDB`).
 - **Amazon MongoDB**:
   - `LinkSnap_URLs`: PK `url_id`, stores original URL, creator ID, created_at, expires_at, total_clicks, custom_slug.
@@ -27,7 +27,7 @@ LinkSnap is a modern, serverless URL shortening and real-time analytics applicat
 
 ```
 .
-├── backend/                        # AWS Serverless Backend
+├── backend/                        # Backend
 │   ├── template.yaml               # AWS SAM Infrastructure as Code Template
 │   ├── package.json
 │   ├── tsconfig.json
@@ -96,7 +96,7 @@ The React frontend will start at `http://localhost:3000`. By default, it runs in
 
 ---
 
-## AWS Serverless Deployment Instructions
+## AWS Deployment Instructions
 
 ### 1. Build Backend Lambdas
 ```bash
