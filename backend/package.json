@@ -1,0 +1,36 @@
+{
+  "name": "linksnap-backend-lambdas",
+  "version": "1.0.0",
+  "description": "AWS Serverless TypeScript Lambdas for LinkSnap URL Shortener & Analytics",
+  "main": "dist/shortenUrl.js",
+  "scripts": {
+    "start": "ts-node src/server.ts",
+    "server": "ts-node src/server.ts",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "ts-node src/__tests__/base62.test.ts",
+    "test:redis": "ts-node src/__tests__/redis.test.ts",
+    "sam:build": "npm run build && sam build",
+    "sam:deploy": "sam deploy --guided"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.714.0",
+    "@aws-sdk/lib-dynamodb": "^3.714.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "ioredis": "^5.11.1",
+    "ioredis-mock": "^8.13.1",
+    "mongoose": "^9.9.2",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.146",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/ioredis": "^4.28.10",
+    "@types/node": "^22.10.2",
+    "@types/sqlite3": "^3.1.11",
+    "typescript": "^5.7.2"
+  }
+}

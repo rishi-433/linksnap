@@ -1,0 +1,149 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  LinkSnap - Production-Grade Serverless URL Shortener & Real-Time Analytics Platform
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 256
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        URLS_TABLE_NAME: !Ref LinkSnapURLsTable
+        CLICKS_TABLE_NAME: !Ref LinkSnapClicksTable
+        BASE_DOMAIN: "https://lsnap.link"
+
+Resources:
+  # =========================================================================
+  # DynamoDB Tables
+  # =========================================================================
+  LinkSnapURLsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LinkSnap_URLs
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: url_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: url_id
+          KeyType: HASH
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      Tags:
+        - Key: Project
+          Value: LinkSnap
+
+  LinkSnapClicksTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LinkSnap_Clicks
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: click_id
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+        - AttributeName: url_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: click_id
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: GSI1_UrlClicks
+          KeySchema:
+            - AttributeName: url_id
+              KeyType: HASH
+            - AttributeName: timestamp
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      Tags:
+        - Key: Project
+          Value: LinkSnap
+
+  # =========================================================================
+  # REST API Gateway
+  # =========================================================================
+  LinkSnapApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+  # =========================================================================
+  # Lambda Functions
+  # =========================================================================
+  ShortenUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/shortenUrl.handler
+      Description: Validates and shortens URLs, creating custom slug or random hash.
+      Events:
+        ShortenApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LinkSnapApiGateway
+            Path: /api/v1/shorten
+            Method: POST
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LinkSnapURLsTable
+
+  RedirectUrlFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/redirectUrl.handler
+      Description: Performs 301/302 URL redirection and logs anonymized click audit telemetry.
+      Events:
+        RedirectApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LinkSnapApiGateway
+            Path: /{shortCode}
+            Method: GET
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LinkSnapURLsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref LinkSnapClicksTable
+
+  GetAnalyticsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/getAnalytics.handler
+      Description: Aggregates time-series, geographic, and device analytics for a shortened link.
+      Events:
+        AnalyticsApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref LinkSnapApiGateway
+            Path: /api/v1/analytics/{shortCode}
+            Method: GET
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref LinkSnapURLsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref LinkSnapClicksTable
+
+Outputs:
+  ApiEndpoint:
+    Description: "API Gateway Base Endpoint URL for Prod stage"
+    Value: !Sub "https://${LinkSnapApiGateway}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  URLsTableName:
+    Description: "DynamoDB LinkSnap_URLs Table Name"
+    Value: !Ref LinkSnapURLsTable
+  ClicksTableName:
+    Description: "DynamoDB LinkSnap_Clicks Table Name"
+    Value: !Ref LinkSnapClicksTable
