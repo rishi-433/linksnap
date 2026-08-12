@@ -1,15 +1,15 @@
 # LinkSnap - Production-Grade Serverless URL Shortener & Analytics
 
-LinkSnap is a modern, serverless URL shortening and real-time analytics application built with AWS Serverless (Node.js/TypeScript Lambdas, Amazon API Gateway, Amazon DynamoDB, AWS SAM IaC) and React 18+ (Vite, TypeScript, Tailwind CSS, Lucide Icons, Recharts, Leaflet).
+LinkSnap is a modern, serverless URL shortening and real-time analytics application built with AWS Serverless (Node.js/TypeScript Lambdas, Amazon API Gateway, Amazon MongoDB, AWS SAM IaC) and React 18+ (Vite, TypeScript, Tailwind CSS, Lucide Icons, Recharts, Leaflet).
 
 ---
 
 ## Technical Stack & Architecture
 
 ### Backend (AWS Serverless)
-- **AWS SAM (Serverless Application Model)**: IaC defining API Gateway, Lambda handlers, DynamoDB tables, and IAM policies.
-- **Node.js 20.x / TypeScript**: Compiled Lambda handlers using AWS SDK v3 (`@aws-sdk/client-dynamodb`, `@aws-sdk/lib-dynamodb`).
-- **Amazon DynamoDB**:
+- **AWS SAM (Serverless Application Model)**: IaC defining API Gateway, Lambda handlers, MongoDB tables, and IAM policies.
+- **Node.js 20.x / TypeScript**: Compiled Lambda handlers using AWS SDK v3 (`@aws-sdk/client-MongoDB`, `@aws-sdk/lib-MongoDB`).
+- **Amazon MongoDB**:
   - `LinkSnap_URLs`: PK `url_id`, stores original URL, creator ID, created_at, expires_at, total_clicks, custom_slug.
   - `LinkSnap_Clicks`: PK `click_id`, SK `timestamp`, GSI1PK `url_id`, SK `timestamp`, stores anonymized IP, country, city, device type, browser, referer.
 - **Amazon API Gateway**: REST API endpoints with full CORS support (`/api/v1/shorten`, `/{shortCode}`, `/api/v1/analytics/{shortCode}`).
@@ -37,7 +37,7 @@ LinkSnap is a modern, serverless URL shortening and real-time analytics applicat
 │       │   ├── redirectUrl.ts      # GET /{shortCode} (301/302 Redirect + Telemetry)
 │       │   └── getAnalytics.ts     # GET /api/v1/analytics/{shortCode}
 │       ├── utils/
-│       │   ├── dynamodb.ts
+│       │   ├── MongoDB.ts
 │       │   ├── geoip.ts
 │       │   ├── userAgent.ts
 │       │   └── response.ts
